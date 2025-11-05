@@ -3,256 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>温馨祝福小窗口</title>
+    <title>温馨提示</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f0f0f0;
             overflow: hidden;
             font-family: 'Microsoft YaHei', sans-serif;
         }
         
-        .control-panel {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            padding: 15px 25px;
-            border-radius: 25px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-            z-index: 10000;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        
-        .control-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        
-        #startBtn { background: #4CAF50; color: white; }
-        #stopBtn { background: #ff4757; color: white; }
-        #addBtn { background: #3498db; color: white; }
-        
-        .control-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        
         .tip-window {
             position: fixed;
-            width: 280px;
-            min-height: 80px;
-            background: white;
-            border-radius: 15px;
+            width: 250px;
+            height: 60px;
+            background: lightpink;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            text-align: center;
-            padding: 20px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            font-size: 16px;
+            border: 2px solid #ccc;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             z-index: 1000;
-            cursor: move;
-            transition: transform 0.3s;
-            border: 3px solid transparent;
+            cursor: default;
         }
         
-        .tip-window:hover {
-            transform: scale(1.05);
-            border-color: #3498db;
-        }
-        
-        .close-btn {
-            position: absolute;
-            top: 8px;
-            right: 12px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #666;
-            font-size: 20px;
-            width: 25px;
-            height: 25px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-        
-        .close-btn:hover {
+        #stopBtn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 10px 20px;
             background: #ff4757;
             color: white;
-        }
-        
-        .counter {
-            color: #666;
-            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 10000;
+            font-family: 'Microsoft YaHei', sans-serif;
         }
     </style>
 </head>
 <body>
-    <div class="control-panel">
-        <button class="control-btn" id="startBtn">开始祝福</button>
-        <button class="control-btn" id="stopBtn">停止所有</button>
-        <button class="control-btn" id="addBtn">添加祝福</button>
-        <span class="counter">窗口数: <span id="windowCount">0</span></span>
-    </div>
+    <button id="stopBtn" onclick="stopProgram()">停止程序 (ESC)</button>
 
     <script>
-        const tips = [
-            '💧 多喝水哦~', '😊 保持微笑呀', '✨ 每天都要元气满满',
-            '🍎 记得多吃水果', '🌞 保持好心情', '❤️ 好好爱自己', 
-            '💝 我想你了', '🎯 梦想成真', '🤝 期待下一次见面', 
-            '🎓 金榜提名', '🌈 顺顺利利', '🌙 早点休息', 
-            '🦋 愿所有烦恼都消失', '⏰ 别熬夜', '😄 今天过得开心嘛', 
-            '🧥 天冷了，多穿衣服', '🎉 恭喜发财', '🌟 心想事成',
-            '🍀 好运连连', '🎁 惊喜不断', '🌺 花开富贵',
-            '🚀 前程似锦', '🎨 创意无限', '🏆 再创辉煌'
-        ];
-
-        const bgColors = [
-            '#FFB6C1', '#87CEEB', '#98FB98', '#E6E6FA',
-            '#FFFACD', '#DDA0DD', '#FF7F50', '#FFE4C4',
-            '#7FFFD4', '#FFE4E1', '#F0FFF0', '#FFF0F5',
-            '#FDF5E6', '#F0F8FF', '#F5F5DC', '#FFEFD5'
-        ];
-
+        // 严格对应Python脚本的变量和逻辑
+        let running = true;
         let windows = [];
-        let isRunning = false;
-        let creationInterval;
-
-        function createTipWindow() {
+        let createdWindows = 0;
+        const maxWindows = 300;  // 对应Python中的300个窗口
+        
+        // 对应Python中的tips列表
+        const tips = [
+            '多喝水哦~', '保持微笑呀', '每天都要元气满满',
+            '记得多吃水果', '保持好心情', '好好爱自己', '我想你了',
+            '梦想成真', '期待下一次见面', '金榜提名',
+            '顺顺利利', '早点休息', '愿所有烦恼都消失',
+            '别熬夜', '今天过得开心嘛', '天冷了，多穿衣服'
+        ];
+        
+        // 对应Python中的bg_colors列表
+        const bgColors = [
+            'lightpink', 'skyblue', 'lightgreen', 'lavender',
+            'lightyellow', 'plum', 'coral', 'bisque', 'aquamarine',
+            'mistyrose', 'honeydew', 'lavenderblush', 'oldlace'
+        ];
+        
+        // 对应Python中的show_warm_tip函数
+        function showWarmTip() {
+            if (!running) return;
+            
+            // 获取屏幕尺寸
             const screenWidth = window.innerWidth;
             const screenHeight = window.innerHeight;
-            const windowWidth = 280;
-            const windowHeight = 80;
-
-            const x = Math.random() * (screenWidth - windowWidth);
-            const y = Math.random() * (screenHeight - windowHeight);
-
+            
+            // 随机窗口位置
+            const windowWidth = 250;
+            const windowHeight = 60;
+            const x = Math.floor(Math.random() * (screenWidth - windowWidth));
+            const y = Math.floor(Math.random() * (screenHeight - windowHeight));
+            
+            // 随机选择提示和背景颜色
             const tip = tips[Math.floor(Math.random() * tips.length)];
             const bgColor = bgColors[Math.floor(Math.random() * bgColors.length)];
-
+            
+            // 创建窗口元素
             const tipWindow = document.createElement('div');
             tipWindow.className = 'tip-window';
             tipWindow.style.left = x + 'px';
             tipWindow.style.top = y + 'px';
             tipWindow.style.backgroundColor = bgColor;
-            tipWindow.style.borderColor = bgColor;
-
-            const closeBtn = document.createElement('span');
-            closeBtn.className = 'close-btn';
-            closeBtn.innerHTML = '×';
-            closeBtn.onclick = function(e) {
-                e.stopPropagation();
-                document.body.removeChild(tipWindow);
-                windows = windows.filter(w => w !== tipWindow);
-                updateCounter();
-            };
-
-            const tipText = document.createElement('span');
-            tipText.textContent = tip;
-            tipText.style.pointerEvents = 'none';
-
-            tipWindow.appendChild(closeBtn);
-            tipWindow.appendChild(tipText);
+            tipWindow.textContent = tip;
+            
+            // 窗口置顶（通过高z-index实现）
+            tipWindow.style.zIndex = 1000 + createdWindows;
+            
             document.body.appendChild(tipWindow);
-
             windows.push(tipWindow);
-            updateCounter();
-            makeDraggable(tipWindow);
+            createdWindows++;
+            
+            console.log(`创建了第 ${createdWindows} 个窗口: "${tip}"`);
         }
-
-        function makeDraggable(element) {
-            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        
+        // 对应Python中的stop_program函数
+        function stopProgram() {
+            running = false;
             
-            element.onmousedown = dragMouseDown;
-
-            function dragMouseDown(e) {
-                if (e.target.className === 'close-btn') return;
-                
-                e = e || window.event;
-                e.preventDefault();
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                document.onmouseup = closeDragElement;
-                document.onmousemove = elementDrag;
-                element.style.zIndex = '1001';
-            }
-
-            function elementDrag(e) {
-                e = e || window.event;
-                e.preventDefault();
-                pos1 = pos3 - e.clientX;
-                pos2 = pos4 - e.clientY;
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                element.style.top = (element.offsetTop - pos2) + "px";
-                element.style.left = (element.offsetLeft - pos1) + "px";
-            }
-
-            function closeDragElement() {
-                document.onmouseup = null;
-                document.onmousemove = null;
-                element.style.zIndex = '1000';
-            }
-        }
-
-        function startCreation() {
-            if (isRunning) return;
-            isRunning = true;
-            
-            // 先创建5个窗口
-            for (let i = 0; i < 5; i++) {
-                setTimeout(createTipWindow, i * 200);
-            }
-            
-            // 然后每隔一段时间创建一个
-            creationInterval = setInterval(createTipWindow, 1000);
-        }
-
-        function stopAllWindows() {
-            isRunning = false;
-            clearInterval(creationInterval);
-            
+            // 关闭所有窗口
             windows.forEach(window => {
                 if (window.parentNode) {
                     document.body.removeChild(window);
                 }
             });
+            
             windows = [];
-            updateCounter();
+            console.log("程序已停止");
+            
+            // 显示停止信息
+            const stopMsg = document.createElement('div');
+            stopMsg.textContent = '程序已停止';
+            stopMsg.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 20px;
+                border: 2px solid #ff4757;
+                border-radius: 10px;
+                font-size: 18px;
+                z-index: 10000;
+            `;
+            document.body.appendChild(stopMsg);
         }
-
-        function updateCounter() {
-            document.getElementById('windowCount').textContent = windows.length;
+        
+        // 模拟Python中的多线程创建窗口
+        function startWindowCreation() {
+            // 对应Python中的循环创建300个窗口
+            for (let i = 0; i < maxWindows; i++) {
+                setTimeout(() => {
+                    if (running) {
+                        showWarmTip();
+                    }
+                }, i * 5);  // 对应time.sleep(0.005)
+            }
         }
-
-        // 事件监听
-        document.getElementById('startBtn').addEventListener('click', startCreation);
-        document.getElementById('stopBtn').addEventListener('click', stopAllWindows);
-        document.getElementById('addBtn').addEventListener('click', createTipWindow);
-
-        // 键盘控制
+        
+        // ESC键绑定
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                stopAllWindows();
-            } else if (e.key === 'Enter') {
-                startCreation();
-            } else if (e.key === ' ') {
-                createTipWindow();
+                stopProgram();
             }
         });
-
-        // 初始创建3个窗口
-        for (let i = 0; i < 3; i++) {
-            setTimeout(createTipWindow, i * 300);
+        
+        // 页面加载后开始执行
+        window.addEventListener('load', function() {
+            console.log("开始创建温馨提示窗口...");
+            startWindowCreation();
+        });
+        
+        // 对应Python中的主循环
+        function mainLoop() {
+            if (running) {
+                setTimeout(mainLoop, 100);  // 对应time.sleep(0.1)
+            }
         }
+        
+        // 启动主循环
+        mainLoop();
     </script>
 </body>
 </html>
