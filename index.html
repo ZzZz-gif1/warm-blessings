@@ -26,6 +26,12 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             z-index: 1000;
             cursor: default;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+        
+        .tip-window:hover {
+            transform: scale(1.05);
         }
         
         #stopBtn {
@@ -41,9 +47,23 @@
             z-index: 10000;
             font-family: 'Microsoft YaHei', sans-serif;
         }
+        
+        #infoPanel {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 10000;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
+    <div id="infoPanel">
+        已创建: <span id="windowCount">0</span>/300 个窗口
+    </div>
     <button id="stopBtn" onclick="stopProgram()">停止程序 (ESC)</button>
 
     <script>
@@ -71,7 +91,7 @@
         
         // 对应Python中的show_warm_tip函数
         function showWarmTip() {
-            if (!running) return;
+            if (!running || createdWindows >= maxWindows) return;
             
             // 获取屏幕尺寸
             const screenWidth = window.innerWidth;
@@ -101,6 +121,9 @@
             document.body.appendChild(tipWindow);
             windows.push(tipWindow);
             createdWindows++;
+            
+            // 更新计数器
+            document.getElementById('windowCount').textContent = createdWindows;
             
             console.log(`创建了第 ${createdWindows} 个窗口: "${tip}"`);
         }
@@ -137,15 +160,20 @@
             document.body.appendChild(stopMsg);
         }
         
-        // 模拟Python中的多线程创建窗口
+        // 模拟Python中的多线程创建窗口 - 调整速度更慢
         function startWindowCreation() {
-            // 对应Python中的循环创建300个窗口
+            let delay = 0;
+            
+            // 对应Python中的循环创建300个窗口，但速度更慢
             for (let i = 0; i < maxWindows; i++) {
+                // 使用递增的延迟时间，让窗口出现越来越慢
+                delay += 50 + Math.random() * 100;  // 50-150毫秒间隔
+                
                 setTimeout(() => {
                     if (running) {
                         showWarmTip();
                     }
-                }, i * 5);  // 对应time.sleep(0.005)
+                }, delay);
             }
         }
         
@@ -159,6 +187,7 @@
         // 页面加载后开始执行
         window.addEventListener('load', function() {
             console.log("开始创建温馨提示窗口...");
+            console.log("窗口生成速度已调慢，请耐心等待...");
             startWindowCreation();
         });
         
@@ -171,6 +200,38 @@
         
         // 启动主循环
         mainLoop();
+        
+        // 添加完成检测
+        function checkCompletion() {
+            if (createdWindows >= maxWindows && running) {
+                console.log("所有300个窗口已创建完成！");
+                const completionMsg = document.createElement('div');
+                completionMsg.textContent = '所有300个祝福窗口已创建完成！';
+                completionMsg.style.cssText = `
+                    position: fixed;
+                    top: 60px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #4CAF50;
+                    color: white;
+                    padding: 15px 25px;
+                    border-radius: 10px;
+                    font-size: 16px;
+                    z-index: 10000;
+                `;
+                document.body.appendChild(completionMsg);
+                
+                // 5秒后隐藏完成消息
+                setTimeout(() => {
+                    if (completionMsg.parentNode) {
+                        document.body.removeChild(completionMsg);
+                    }
+                }, 5000);
+            }
+        }
+        
+        // 定期检查完成状态
+        setInterval(checkCompletion, 1000);
     </script>
 </body>
 </html>
